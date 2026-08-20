@@ -39,6 +39,35 @@ Plugin không cần dựng trường đua hoặc spawn ngựa thật. Kết qu�
 
 Không để nhiều JAR KirKeiba cùng lúc trong `plugins/`.
 
+## Quy trình branch và phát hành
+
+Mỗi tính năng được phát triển trên branch riêng, không commit trực tiếp vào `main`:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c feature/ten-tinh-nang
+```
+
+Sau khi hoàn thành, push branch và mở Pull Request vào `main`. Chỉ tạo phiên bản sau khi Pull Request đã được kiểm tra và merge.
+
+```bash
+git switch main
+git pull --ff-only
+git tag -a v4.5.0 -m "KirKeiba 4.5.0"
+git push origin v4.5.0
+```
+
+Tag phải khớp với `version` trong `build.gradle` và phải thuộc lịch sử của `main`. Workflow `.github/workflows/release.yml` sẽ:
+
+1. Xác minh tag và phiên bản.
+2. Cài Temurin Java 25.
+3. Chạy test và build bằng Gradle Wrapper.
+4. Tạo GitHub Release với release notes tự động.
+5. Đính kèm file `KirKeiba-<version>.jar` vào Release.
+
+Workflow cũng hỗ trợ chạy thủ công bằng `Actions → Build and publish release → Run workflow`, dùng cho tag cũ đã được push trước khi workflow tồn tại.
+
 ## Luồng một vòng đua
 
 1. Plugin chọn và khóa điều kiện vòng.

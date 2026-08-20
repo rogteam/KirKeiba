@@ -22,12 +22,15 @@ permissions:
       kirkeiba.admin.forcestart: true
       kirkeiba.admin.cancel: true
       kirkeiba.admin.reload: true
+      kirkeiba.admin.update: true
       kirkeiba.admin.reset: true
   kirkeiba.admin.forcestart:
     default: op
   kirkeiba.admin.cancel:
     default: op
   kirkeiba.admin.reload:
+    default: op
+  kirkeiba.admin.update:
     default: op
   kirkeiba.admin.reset:
     default: op

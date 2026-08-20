@@ -1,4 +1,4 @@
-# KirKeiba MVP 4 — 4.4.0
+# KirKeiba MVP 4 — 4.4.1
 
 KirKeiba là minigame cược đua ngựa ảo cho Paper. Người chơi chọn loại vé, đọc chỉ số ngựa và điều kiện đường đua, mua vé bằng Vault Economy rồi nhận thưởng theo cơ chế pool có tài trợ từ server.
 
@@ -32,7 +32,7 @@ Plugin không cần dựng trường đua hoặc spawn ngựa thật. Kết qu�
 ## Cài đặt
 
 1. Cài Vault và economy provider.
-2. Chép `KirKeiba-4.4.0.jar` vào `plugins/`.
+2. Chép `KirKeiba-4.4.1.jar` vào `plugins/`.
 3. Khởi động server một lần để sinh `plugins/KirKeiba/config.yml`.
 4. Dừng server, chỉnh config rồi khởi động lại.
 5. Dùng `/keiba` để mở GUI.
@@ -192,7 +192,7 @@ Rương pool hiển thị:
 - ID, lựa chọn, tiền cược và hệ số tại thời điểm mua của từng vé.
 - 36 người mỗi trang theo config mặc định, có trang trước/sau.
 
-Thông tin này là công khai. Nếu server không muốn lộ lựa chọn trước khi khóa cược, cần chỉnh code hoặc tắt đường truy cập; bản 4.4.0 chưa có chế độ ẩn tên/lựa chọn theo trạng thái.
+Thông tin này là công khai. Nếu server không muốn lộ lựa chọn trước khi khóa cược, cần chỉnh code hoặc tắt đường truy cập; bản 4.4.1 chưa có chế độ ẩn tên/lựa chọn theo trạng thái.
 
 ```yaml
 gui:
@@ -391,6 +391,7 @@ Placeholder không hợp lệ hoặc thiếu dữ liệu được render thành 
 | Lệnh | Chức năng |
 |---|---|
 | `/keiba admin help` | Danh sách lệnh admin |
+| `/keiba admin update` | Kiểm tra GitHub Release mới nhất |
 | `/keiba admin forcestart` | Khóa cược ngay nếu đang mở |
 | `/keiba admin cancel` | Hủy vòng, hoàn vé và mở vòng mới |
 | `/keiba admin reload` | Nạp lại config; danh sách ngựa vẫn cần restart |
@@ -411,9 +412,26 @@ Mọi reset đều tạo backup SQLite trước khi thay đổi dữ liệu.
 | `kirkeiba.admin.forcestart` | `op` | Ép khóa cược |
 | `kirkeiba.admin.cancel` | `op` | Hủy vòng |
 | `kirkeiba.admin.reload` | `op` | Reload config |
+| `kirkeiba.admin.update` | `op` | Kiểm tra cập nhật từ GitHub |
 | `kirkeiba.admin.reset` | `op` | Reset dữ liệu |
 
-Handler admin hiện yêu cầu cả `kirkeiba.admin` và quyền con tương ứng. Bản 4.4.0 mới chỉ khai báo `kirkeiba.use` và `kirkeiba.bet` trong `plugin.yml`, chưa chặn command/mua vé theo hai quyền này.
+Handler admin yêu cầu cả `kirkeiba.admin` và quyền con tương ứng. Bản 4.4.1 mới chỉ khai báo `kirkeiba.use` và `kirkeiba.bet` trong `plugin.yml`, chưa chặn command/mua vé theo hai quyền này.
+
+## Kiểm tra cập nhật
+
+`/keiba admin` luôn hiển thị phiên bản đang chạy. Lệnh `/keiba admin update` bỏ qua cache và kiểm tra GitHub Release mới nhất của `rogteam/KirKeiba`.
+
+```yaml
+update-check:
+  enabled: true
+  repository: 'rogteam/KirKeiba'
+  check-on-startup: true
+  cache-minutes: 30
+  connect-timeout-seconds: 5
+  request-timeout-seconds: 10
+```
+
+Việc kiểm tra chạy bất đồng bộ và chỉ đọc metadata Release công khai. Plugin không tự tải, thay thế hoặc cài JAR. Có thể đổi repository và toàn bộ thông báo trong `update-check.messages`.
 
 ## Dữ liệu, backup và khôi phục
 
@@ -448,7 +466,7 @@ $env:JAVA_HOME = 'đường-dẫn-tới-JDK-25'
 JAR nằm trong:
 
 ```text
-build/libs/KirKeiba-4.4.0.jar
+build/libs/KirKeiba-4.4.1.jar
 ```
 
 ## Xử lý lỗi thường gặp

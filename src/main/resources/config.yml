@@ -537,6 +537,7 @@ messages:
     - '&e/keiba admin &7- Các lệnh quản trị (cần quyền)'
   admin-help:
     - '&6----- KIR Keiba Admin -----'
+    - '&e/keiba admin update &7- Kiểm tra bản mới từ GitHub'
     - '&e/keiba admin forcestart &7- Khóa cược ngay'
     - '&e/keiba admin cancel &7- Hủy vòng và hoàn vé'
     - '&e/keiba admin reload &7- Nạp lại config'
@@ -544,6 +545,28 @@ messages:
     - '&e/keiba admin reset history confirm &7- Xóa lịch sử hiển thị'
     - '&e/keiba admin reset stats confirm &7- Xóa vé cũ và thống kê'
     - '&c/keiba admin reset all confirm &7- Reset toàn bộ dữ liệu'
+
+# ======================== KIỂM TRA CẬP NHẬT ========================
+# Plugin chỉ đọc GitHub Release công khai, không tải hoặc tự cài JAR.
+# Kiểm tra chạy bất đồng bộ nên không chặn main thread của server.
+update-check:
+  enabled: true
+  # Repository GitHub theo định dạng owner/name.
+  repository: 'rogteam/KirKeiba'
+  # Tự kiểm tra một lần khi plugin bật. Chỉ ghi kết quả vào console.
+  check-on-startup: true
+  # /keiba admin help dùng kết quả cache trong thời gian này để tránh gọi API liên tục.
+  cache-minutes: 30
+  connect-timeout-seconds: 5
+  request-timeout-seconds: 10
+  # Placeholder: {current}, {latest}, {url}, {error}.
+  messages:
+    current: '&7Phiên bản KirKeiba hiện tại: &f{current}'
+    checking: '&eĐang kiểm tra bản mới từ GitHub...'
+    latest: '&aBạn đang dùng bản mới nhất: &f{current}'
+    available: '&eCó bản KirKeiba mới &f{latest}&e: &b{url}'
+    failed: '&cKhông thể kiểm tra cập nhật: &7{error}'
+    disabled: '&8Kiểm tra cập nhật đang tắt trong config.'
 
 horses:
 # Tùy chọn cho từng ngựa: material, display-name và lore. Không khai báo sẽ dùng gui.horse.

@@ -1,0 +1,628 @@
+# =============================================================
+# KIR KEIBA - FILE CẤU HÌNH
+# Màu dùng &: &a xanh, &c đỏ, &e vàng, &7 xám, &f trắng.
+# Placeholder chung: {race}, {seconds}, {state}, {pool}.
+# Ngựa: {number}, {name}, {style}, {power}, {stamina}, {finish}, {odds}.
+# Vé: {type}, {required}, {stake}, {payout}, {description}, {example}.
+# Khi đã chọn loại vé: {house_seed}=tiền server tài trợ cho thị trường đó.
+# GUI pool: {tickets}, {players}, {player_pool}, {market_pool}, {page}, {pages},
+#   {player}, {player_tickets}, {player_total}, {ticket_id}, {selection}, {ticket_odds}.
+# Kết quả: {first}, {second}, {first_number}, {second_number}.
+# Vòng kế tiếp: {next_race}.
+# Điều kiện vòng: {distance}, {meters}, {surface}, {track_state}, {weather}.
+# Riêng lore ngựa: {style_modifier}=mức bonus style thay đổi trong điều kiện hiện tại.
+# Placeholder sai hoặc chưa có dữ liệu sẽ hiện dấu —.
+# =============================================================
+
+# KINH TẾ CHUNG
+economy:
+  # Giá dự phòng cho config cũ. Nên chỉnh stake trong từng bet-types.
+  bet-unit: 10000.0
+  # 0.15 = giữ 15% pool; 85% còn lại được chia cho vé thắng.
+  house-edge: 0.15
+  # Tổng số vé tối đa mỗi người được mua trong một vòng.
+  max-tickets-per-player: 5
+  # Tiền ảo do server tài trợ cho TỪNG thị trường ở mỗi vòng.
+  # Khoản này không bị trừ từ tài khoản nào; nó là money faucet giúp một người chơi vẫn có lãi.
+  # Ví dụ WIN: người chơi cược 30.000, seed 30.000, phí 15% => hệ số tự nhiên x1,70.
+  house-seed-pool:
+    WIN: 30000.0
+    PLACE: 30000.0
+    UMAREN: 50000.0
+    EXACTA: 75000.0
+    TRIFECTA: 100000.0
+  # Sàn hệ số: nếu công thức pool thấp hơn giá trị này, server bù phần còn thiếu.
+  # 1.20 nghĩa là cược 10.000 và thắng sẽ nhận tối thiểu 12.000 (gồm cả vốn).
+  minimum-odds:
+    WIN: 1.20
+    PLACE: 1.15
+    UMAREN: 1.30
+    EXACTA: 1.50
+    TRIFECTA: 2.00
+  # Trần hệ số để tránh một vé hiếm tạo payout quá lớn và gây lạm phát.
+  maximum-odds:
+    WIN: 10.0
+    PLACE: 5.0
+    UMAREN: 20.0
+    EXACTA: 30.0
+    TRIFECTA: 50.0
+
+# Mỗi loại cược có pool độc lập. Có thể tắt từng loại hoặc đặt giá vé riêng.
+# ======================== LOẠI CƯỢC ========================
+# enabled: false sẽ tắt hoàn toàn và ẩn loại vé khỏi GUI.
+# Loại còn bật được dồn lần lượt vào gui.bet-type-slots.
+# stake là giá vé cố định của loại cược đó.
+# description và example xuất hiện trong lore của nút loại cược.
+bet-types:
+  WIN:
+    enabled: true
+    stake: 10000.0
+    description: 'Chọn 1 ngựa sẽ về đích đầu tiên.'
+    example: 'Ví dụ: chọn #2, ngựa #2 về nhất là thắng.'
+  PLACE:
+    enabled: true
+    stake: 10000.0
+    description: 'Chọn 1 ngựa có thể về nhất, nhì hoặc ba.'
+    example: 'Ví dụ: chọn #5, ngựa #5 nằm trong top 3 là thắng.'
+  UMAREN:
+    enabled: true
+    stake: 10000.0
+    description: 'Chọn 2 ngựa sẽ chiếm hạng nhất và nhì.'
+    example: 'Chọn #2 và #5: kết quả 2-5 hoặc 5-2 đều thắng.'
+  EXACTA:
+    enabled: true
+    stake: 15000.0
+    description: 'Chọn đúng ngựa hạng nhất rồi đến hạng nhì.'
+    example: 'Bấm #2 rồi #5: chỉ kết quả 2-5 mới thắng.'
+  TRIFECTA:
+    enabled: true
+    stake: 20000.0
+    description: 'Chọn đúng 3 ngựa về đầu theo thứ tự.'
+    example: 'Bấm #2, #5, #1: chỉ kết quả 2-5-1 mới thắng.'
+
+# ======================== LỊCH VÒNG ĐUA ========================
+schedule:
+  # CONTINUOUS: hết phần kết quả sẽ mở vòng mới ngay.
+  # INTERVAL: nghỉ interval-seconds rồi mới mở vòng mới.
+  mode: CONTINUOUS
+  # Chỉ dùng với INTERVAL; là thời gian nghỉ giữa hai vòng.
+  interval-seconds: 300
+  # Thời gian được mua vé.
+  betting-seconds: 180
+  # Thời gian khóa cược trước khi đua.
+  locked-seconds: 15
+  # Thời gian hiển thị đang đua.
+  running-seconds: 35
+  # Thời gian giữ kết quả.
+  result-seconds: 30
+
+# MÔ PHỎNG KẾT QUẢ
+race:
+  # Số ngựa mong đợi; danh sách thực tế lấy từ horses bên dưới.
+  horse-count: 8
+  # Dành cho thông báo kết quả; giữ để tương thích cấu hình.
+  announce: true
+  # Càng nhiều bước, biến động ngẫu nhiên được lấy mẫu càng nhiều.
+  simulation-steps: 35
+
+# ======================== ĐIỀU KIỆN ĐƯỜNG ĐUA ẢO (MVP 4) ========================
+# Plugin chọn 1 mục trong mỗi nhóm distances/surfaces/track-states/weather khi mở vòng.
+# weight là trọng số xuất hiện, KHÔNG phải phần trăm. Ví dụ weight 25 và 75 tương ứng 25%/75%.
+# enabled: false sẽ loại riêng mục đó khỏi danh sách chọn; enabled ở cấp cao nhất tắt toàn hệ thống.
+# Các khóa *-multiplier nhân vào thành phần tương ứng trong công thức:
+#   1.10 = tăng 10%, 1.00 = giữ nguyên, 0.90 = giảm 10%.
+# power-multiplier tác động sức mạnh đầu chặng; stamina-multiplier tác động sức bền cả chặng;
+# finish-multiplier tác động khả năng cuối chặng; randomness-multiplier tác động độ bất ngờ.
+# style-multipliers chỉ nhân BONUS của style, không nhân toàn bộ tốc độ ngựa.
+race-conditions:
+  enabled: true
+  distances:
+    SPRINT:
+      enabled: true
+      display-name: 'Nước rút'
+      meters: 1200
+      weight: 25
+      power-multiplier: 1.08
+      stamina-multiplier: 0.94
+      finish-multiplier: 0.98
+      randomness-multiplier: 1.00
+      style-multipliers: {NIGE: 1.12, SENKO: 1.06, SASHI: 0.96, OIKOMI: 0.90}
+    MIDDLE:
+      enabled: true
+      display-name: 'Trung bình'
+      meters: 1800
+      weight: 50
+      power-multiplier: 1.00
+      stamina-multiplier: 1.00
+      finish-multiplier: 1.00
+      randomness-multiplier: 1.00
+      style-multipliers: {NIGE: 1.00, SENKO: 1.06, SASHI: 1.04, OIKOMI: 1.00}
+    LONG:
+      enabled: true
+      display-name: 'Đường dài'
+      meters: 2600
+      weight: 25
+      power-multiplier: 0.94
+      stamina-multiplier: 1.10
+      finish-multiplier: 1.06
+      randomness-multiplier: 1.00
+      style-multipliers: {NIGE: 0.90, SENKO: 0.98, SASHI: 1.08, OIKOMI: 1.12}
+  surfaces:
+    TURF:
+      enabled: true
+      display-name: 'Cỏ'
+      weight: 60
+      power-multiplier: 1.00
+      stamina-multiplier: 1.00
+      finish-multiplier: 1.02
+      randomness-multiplier: 1.00
+      style-multipliers: {NIGE: 1.00, SENKO: 1.00, SASHI: 1.03, OIKOMI: 1.03}
+    DIRT:
+      enabled: true
+      display-name: 'Đất'
+      weight: 40
+      power-multiplier: 1.04
+      stamina-multiplier: 1.00
+      finish-multiplier: 0.98
+      randomness-multiplier: 1.03
+      style-multipliers: {NIGE: 1.05, SENKO: 1.03, SASHI: 0.98, OIKOMI: 0.96}
+  track-states:
+    FIRM:
+      enabled: true
+      display-name: 'Khô, nhanh'
+      weight: 40
+      power-multiplier: 1.03
+      stamina-multiplier: 0.98
+      finish-multiplier: 1.00
+      randomness-multiplier: 0.95
+      style-multipliers: {NIGE: 1.04, SENKO: 1.02, SASHI: 1.00, OIKOMI: 0.98}
+    GOOD:
+      enabled: true
+      display-name: 'Tốt'
+      weight: 35
+      power-multiplier: 1.00
+      stamina-multiplier: 1.00
+      finish-multiplier: 1.00
+      randomness-multiplier: 1.00
+      style-multipliers: {NIGE: 1.00, SENKO: 1.00, SASHI: 1.00, OIKOMI: 1.00}
+    SOFT:
+      enabled: true
+      display-name: 'Mềm'
+      weight: 20
+      power-multiplier: 0.97
+      stamina-multiplier: 1.05
+      finish-multiplier: 1.02
+      randomness-multiplier: 1.08
+      style-multipliers: {NIGE: 0.96, SENKO: 1.01, SASHI: 1.04, OIKOMI: 1.05}
+    HEAVY:
+      enabled: true
+      display-name: 'Nặng, lầy'
+      weight: 5
+      power-multiplier: 0.90
+      stamina-multiplier: 1.12
+      finish-multiplier: 1.05
+      randomness-multiplier: 1.15
+      style-multipliers: {NIGE: 0.90, SENKO: 0.98, SASHI: 1.07, OIKOMI: 1.10}
+  weather:
+    CLEAR:
+      enabled: true
+      display-name: 'Nắng'
+      weight: 60
+      power-multiplier: 1.00
+      stamina-multiplier: 1.00
+      finish-multiplier: 1.00
+      randomness-multiplier: 1.00
+      style-multipliers: {NIGE: 1.00, SENKO: 1.00, SASHI: 1.00, OIKOMI: 1.00}
+    RAIN:
+      enabled: true
+      display-name: 'Mưa'
+      weight: 25
+      power-multiplier: 0.98
+      stamina-multiplier: 1.04
+      finish-multiplier: 1.00
+      randomness-multiplier: 1.08
+      style-multipliers: {NIGE: 0.97, SENKO: 1.00, SASHI: 1.03, OIKOMI: 1.04}
+    WIND:
+      enabled: true
+      display-name: 'Gió mạnh'
+      weight: 10
+      power-multiplier: 0.98
+      stamina-multiplier: 1.02
+      finish-multiplier: 1.02
+      randomness-multiplier: 1.15
+      style-multipliers: {NIGE: 0.96, SENKO: 1.00, SASHI: 1.04, OIKOMI: 1.05}
+    STORM:
+      enabled: true
+      display-name: 'Giông'
+      weight: 5
+      power-multiplier: 0.94
+      stamina-multiplier: 1.08
+      finish-multiplier: 1.03
+      randomness-multiplier: 1.25
+      style-multipliers: {NIGE: 0.92, SENKO: 0.98, SASHI: 1.06, OIKOMI: 1.10}
+
+# Số vòng tối đa hiển thị trong GUI lịch sử.
+history:
+  keep-last: 30
+
+# ÂM THANH THEO GIAI ĐOẠN. Dùng tên Sound Bukkit/Minecraft.
+sounds:
+  # Xóa khóa, để trống, hoặc dùng NONE/OFF để tắt tiếng ở giai đoạn đó.
+  open: BLOCK_NOTE_BLOCK_PLING
+  lock: BLOCK_IRON_DOOR_CLOSE
+  start: ENTITY_HORSE_GALLOP
+  result: UI_TOAST_CHALLENGE_COMPLETE
+
+# ĐƯỜNG ĐUA VẬT LÝ chưa dùng trong bản minigame GUI; giữ để tương thích.
+visual-track:
+  enabled: false
+  world: world
+  start: {x: 0.5, y: 65.0, z: 0.5}
+  direction: {x: 1.0, z: 0.0}
+  length: 80.0
+  lane-spacing: 1.8
+
+bossbar:
+  # false = ẩn BossBar KirKeiba.
+  enabled: true
+  # SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20.
+  style: SEGMENTED_20
+  # Placeholder: {race}, {next_race}, {seconds}, {state}, {pool},
+  # {first}, {second}, {first_number}, {second_number}, {odds}.
+  titles:
+    betting-open: '&6Keiba #{race} &8| &e{meters}m {surface} &8| &b{track_state}, {weather} &8| &a{seconds}s'
+    betting-locked: '&6KIR Keiba &8| &fVòng #{race} &8| &eĐã khóa cược &8| &fXuất phát sau {seconds}s'
+    running: '&6KIR Keiba &8| &fVòng #{race} &8| &bĐang đua &8| &fCòn {seconds}s'
+    result: '&6KIR Keiba &8| &fVòng #{race} &8| &e#{first_number} {first} &7- &e#{second_number} {second}'
+    waiting: '&6KIR Keiba &8| &fVòng #{next_race} &8| &eMở sau {seconds}s'
+  colors:
+    betting-open: GREEN
+    betting-locked: YELLOW
+    running: BLUE
+    result: PURPLE
+    waiting: WHITE
+
+# ======================== GIAO DIỆN ========================
+# Các khóa *-slot là vị trí inventory, bắt đầu từ 0.
+# material phải là Minecraft Material hợp lệ, ví dụ PAPER, CLOCK, RED_DYE.
+# name/title/lore hỗ trợ mã màu & và placeholder ghi ở đầu file.
+gui:
+  title: '&0KIR Keiba • Vòng #{race}'
+  size: 54
+  # 8 ngựa nằm liên tiếp trên một hàng. Mỗi số là slot inventory.
+  horse-slots: [10, 11, 12, 13, 14, 15, 16, 17]
+  status-slot: 4
+  confirm-slot: 40
+  tickets-slot: 45
+  refresh-slot: 49
+  help-slot: 53
+  history-slot: 46
+  stats-slot: 47
+  history-title: '&0Lịch sử KIR Keiba'
+  # ======================== RƯƠNG CHI TIẾT POOL ========================
+  # Chuột phải vào nút loại vé để mở. GUI công khai tên người mua, lựa chọn và tiền từng vé.
+  # Mỗi trang chứa các slot trong player-slots; quá số người sẽ tự tạo trang sau.
+  pool-details:
+    title: '&0Pool {type} • Trang {page}/{pages}'
+    size: 54
+    summary-slot: 4
+    back-slot: 49
+    previous-slot: 48
+    next-slot: 50
+    empty-slot: 22
+    empty-material: BARRIER
+    empty-name: '&7Chưa có người mua vé'
+    empty-lore:
+      - '&fPool này hiện chỉ có tiền tài trợ của server.'
+    # 36 vị trí dành cho tối đa 36 người/trang.
+    player-slots: [9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44]
+    summary:
+      material: CHEST
+      name: '&6&lPool {type}'
+      lore:
+        - '&7Vòng: &f#{race}'
+        - '&7Số người mua: &b{players}'
+        - '&7Tổng số vé: &e{tickets}'
+        - '&7Tiền người chơi: &e{player_pool}'
+        - '&7Server tài trợ: &a{house_seed}'
+        - '&7Pool dùng tính thưởng: &6{market_pool}'
+        - ''
+        - '&8Hệ số còn phụ thuộc đáp án nào thắng.'
+    player:
+      material: PLAYER_HEAD
+      name: '&e&l{player}'
+      lore:
+        - '&7Số vé trong pool này: &f{player_tickets}'
+        - '&7Tổng tiền đã cược: &e{player_total}'
+        - ''
+        - '&bCác vé đã mua:'
+      # Một dòng được nối thêm cho từng vé của người này.
+      ticket-line: '&7#{ticket_id} &f{selection} &8• &e{stake} &8• &6x{ticket_odds}'
+  # Danh sách vị trí khả dụng, không gắn cứng với từng loại vé.
+  # Ví dụ tắt PLACE: WIN ở 28, UMAREN tự dồn vào 29, EXACTA vào 30.
+  # Cần ít nhất số slot bằng số loại cược đang enabled.
+  bet-type-slots: [28, 29, 30, 31, 32]
+  bet-type-lore:
+    - '&f{description}'
+    - '&7{example}'
+    - ''
+    - '&7Cần chọn: &f{required} ngựa'
+    - '&7Giá vé: &e{stake}'
+    - '&aChuột trái: &7chọn loại cược'
+    - '&bChuột phải: &7xem người mua và các vé'
+  horse-material: HORSE_SPAWN_EGG
+  selected-material: LIME_DYE
+  status:
+    material: CLOCK
+    name: '&6Vòng #{race}'
+    lore:
+      - '&7Trạng thái: &f{state}'
+      - '&7Thời gian còn lại: &e{seconds}s'
+      - ''
+      - '&bĐiều kiện vòng hiện tại:'
+      - '&7Cự ly: &f{distance} ({meters}m)'
+      - '&7Mặt đường: &f{surface}'
+      - '&7Tình trạng: &f{track_state}'
+      - '&7Thời tiết: &f{weather}'
+  horse:
+    name: '&e#{number} {name}'
+    selected-name: '&a#{number} {name}'
+    lore:
+      - '&7Lối chạy: &f{style}'
+      - '&7Sức mạnh: &f{power}'
+      - '&7Thể lực: &f{stamina}'
+      - '&7Nước rút: &f{finish}'
+      - '&7Ảnh hưởng style vòng này: &b{style_modifier}%'
+      - '&7Hệ số thưởng dự kiến: &ex{odds}'
+      - '{selection_hint}'
+  confirm:
+    material: EMERALD
+    name: '&aXác nhận mua vé'
+    lore:
+      - '&7Giá vé: &f{stake}'
+      - '&7Loại cược: &e{type}'
+      - '&7Server tài trợ pool: &a{house_seed}'
+      - '&7Hệ số thưởng hiện tại: &ex{odds}'
+      - '&7Nếu thắng dự kiến nhận: &a{payout}'
+      - '&8Hệ số thưởng thay đổi đến khi khóa cược'
+      - '{confirm_hint}'
+  tickets:
+    material: BOOK
+    name: '&bVé của bạn'
+  refresh:
+    material: COMPASS
+    name: '&eLàm mới'
+    lore: ['&7Cập nhật trạng thái và hệ số thưởng']
+  help:
+    material: KNOWLEDGE_BOOK
+    name: '&dHướng dẫn chơi'
+    lore: ['&7Nhấn để xem luật Umaren và cách trả thưởng']
+    title: '&0Wiki KIR Keiba'
+    # Kích thước GUI wiki: 9, 18, 27, 36, 45 hoặc 54.
+    size: 54
+    content-material: WRITABLE_BOOK
+    content-name: '&6Cách chơi Umaren'
+    lines:
+      - '&6CÁCH CHƠI RẤT ĐƠN GIẢN'
+      - '&f1. Chọn một loại vé ở hàng phía dưới.'
+      - '&f2. Bấm vào ngựa bạn đoán sẽ thắng.'
+      - '&f3. Bấm &aXác nhận mua vé&f.'
+      - '&f4. Chờ hết giờ để xem kết quả.'
+      - ''
+      - '&eWIN:&f chọn 1 ngựa về nhất.'
+      - '&ePLACE:&f chọn 1 ngựa nằm trong top 3.'
+      - '&eUMAREN:&f chọn đúng 2 ngựa đầu, đổi thứ tự vẫn thắng.'
+      - '&eEXACTA:&f chọn đúng hạng nhất rồi hạng nhì.'
+      - '&eTRIFECTA:&f chọn đúng hạng nhất, nhì và ba.'
+      - ''
+      - '&cChú ý: EXACTA và TRIFECTA tính theo thứ tự bạn bấm!'
+      - '&7Hệ số thưởng càng lớn thì có thể nhận nhiều tiền hơn.'
+      - '&7Ví dụ x4,25: cược 10.000$ có thể nhận 42.500$.'
+      - '&7Hệ số thay đổi cho đến lúc đóng cược.'
+      - '&cĐoán sai sẽ mất tiền mua vé. Hãy chơi có giới hạn!'
+      - ''
+      - '&eLệnh: /keiba, /keiba status, /keiba tickets, /keiba help'
+    pool-lines:
+      - ''
+      - '&6TIỀN CƯỢC ĐƯỢC CHIA THẾ NÀO?'
+      - '&fMỗi loại vé có một hũ tiền riêng.'
+      - '&7WIN chỉ chia tiền trong hũ WIN.'
+      - '&7UMAREN chỉ chia tiền trong hũ UMAREN.'
+      - '&7PLACE, EXACTA và TRIFECTA cũng có hũ riêng.'
+      - '&fNhiều người chọn cùng đáp án → &chệ số thưởng giảm&f.'
+      - '&fÍt người chọn đáp án đó → &ahệ số thưởng tăng&f.'
+      - '&eSố người cược không làm ngựa chạy nhanh hơn.'
+      - '&7Kết quả dựa vào chỉ số ngựa và may mắn của vòng.'
+    # Wiki nhiều item. Mỗi trang có slot, material, name và lore riêng.
+    # Có thể thêm/bớt/đổi vị trí trang; slot phải nằm trong kích thước GUI.
+    # Lore hỗ trợ tất cả placeholder ghi ở đầu file.
+    pages:
+      - slot: 10
+        material: LIME_DYE
+        name: '&a1. Bắt đầu chơi'
+        lore:
+          - '&f1. Dùng &e/keiba&f để mở bàn cược.'
+          - '&f2. Đọc điều kiện vòng ở biểu tượng đồng hồ.'
+          - '&f3. Chọn loại vé rồi chọn đủ số ngựa.'
+          - '&f4. Kiểm tra giá và hệ số thưởng.'
+          - '&f5. Nhấn xác nhận và chờ kết quả.'
+          - ''
+          - '&7Dùng la bàn để làm mới thông tin GUI.'
+      - slot: 11
+        material: PAPER
+        name: '&e2. Các loại vé'
+        lore:
+          - '&eWIN:&f chọn đúng ngựa về nhất.'
+          - '&ePLACE:&f ngựa đã chọn phải vào Top 3.'
+          - '&eUMAREN:&f đúng hai ngựa đầu, không xét thứ tự.'
+          - '&eEXACTA:&f đúng hạng nhất và nhì theo thứ tự.'
+          - '&eTRIFECTA:&f đúng Top 3 theo thứ tự.'
+          - ''
+          - '&cEXACTA/TRIFECTA xét thứ tự bạn bấm.'
+      - slot: 12
+        material: GRASS_BLOCK
+        name: '&b3. Điều kiện đường đua'
+        lore:
+          - '&7Vòng hiện tại: &f{meters}m, {surface}'
+          - '&7Tình trạng: &f{track_state}'
+          - '&7Thời tiết: &f{weather}'
+          - ''
+          - '&fCự ly đổi vai trò của power/stamina/finish.'
+          - '&fMặt đường, tình trạng và thời tiết có thể'
+          - '&flàm mạnh/yếu style và tăng độ bất ngờ.'
+          - '&eĐiều kiện được khóa trước khi mở cược.'
+      - slot: 13
+        material: SADDLE
+        name: '&63.5. Lối chạy của ngựa'
+        lore:
+          - '&eNIGE:&f dẫn đầu, mạnh đầu chặng.'
+          - '&eSENKO:&f bám đầu, ổn định giữa chặng.'
+          - '&eSASHI:&f tăng tốc từ nửa sau.'
+          - '&eOIKOMI:&f chịu thiệt đầu chặng, nước rút lớn.'
+          - ''
+          - '&7Cự ly ngắn thường hợp NIGE/SENKO.'
+          - '&7Cự ly dài thường hợp SASHI/OIKOMI.'
+          - '&7Hãy xem dòng ảnh hưởng style trên từng ngựa.'
+      - slot: 14
+        material: SPYGLASS
+        name: '&d4. Chỉ số và kết quả'
+        lore:
+          - '&ePower:&f quan trọng hơn ở đầu chặng.'
+          - '&eStamina:&f đóng góp ổn định toàn chặng.'
+          - '&eFinish:&f quan trọng hơn ở cuối chặng.'
+          - ''
+          - '&fKết quả dựa trên chỉ số, style, điều kiện'
+          - '&fvòng hiện tại và biến động ngẫu nhiên.'
+      - slot: 15
+        material: GOLD_INGOT
+        name: '&65. Hũ tiền và hệ số thưởng'
+        lore:
+          - '&fMỗi loại vé có một hũ tiền độc lập.'
+          - '&fServer thêm tiền tài trợ vào từng hũ.'
+          - '&7WIN không chia chung tiền với PLACE.'
+          - '&fNhiều tiền cùng chọn một đáp án:'
+          - '&cHệ số thưởng của đáp án đó giảm.'
+          - '&fÍt tiền chọn đáp án thắng:'
+          - '&aHệ số thưởng có thể cao hơn.'
+          - '&7Người thắng nhận {return_percent}% pool.'
+          - '&7Phí hệ thống: {house_percent}%.'
+          - '&7Hệ số còn bị giới hạn bởi sàn/trần server.'
+      - slot: 16
+        material: REDSTONE_TORCH
+        name: '&c6. Lưu ý quan trọng'
+        lore:
+          - '&fTiền cược không làm ngựa chạy nhanh hơn.'
+          - '&fHệ số thưởng không phản ánh khả năng thắng.'
+          - '&fHệ số có thể đổi đến khi cổng cược khóa.'
+          - '&fVé đoán sai sẽ mất tiền cược.'
+          - ''
+          - '&eHãy đặt giới hạn tiền và chơi có trách nhiệm.'
+    back-slot: 49
+    back-material: ARROW
+    back-name: '&aQuay lại đặt cược'
+
+messages:
+  prefix: '&6[KIR Keiba]&r '
+  # Dùng khi gọi /keiba hoặc /keiba status trong thời gian nghỉ.
+  # Placeholder: {seconds}, {next_race}.
+  waiting: '&eKeiba đang nghỉ. &fVòng #{next_race} mở sau &e{seconds} giây&f.'
+  no-permission: '&cBạn không có quyền.'
+  player-only: '&cLệnh này chỉ dành cho người chơi.'
+  help:
+    - '&6----- KIR Keiba -----'
+    - '&e/keiba &7- Mở giao diện đặt cược'
+    - '&e/keiba status &7- Xem trạng thái vòng hiện tại'
+    - '&e/keiba tickets &7- Xem các vé của bạn'
+    - '&e/keiba help &7- Xem hướng dẫn trò chơi'
+    - '&e/keiba admin &7- Các lệnh quản trị (cần quyền)'
+  admin-help:
+    - '&6----- KIR Keiba Admin -----'
+    - '&e/keiba admin forcestart &7- Khóa cược ngay'
+    - '&e/keiba admin cancel &7- Hủy vòng và hoàn vé'
+    - '&e/keiba admin reload &7- Nạp lại config'
+    - '&e/keiba admin reset current confirm &7- Tạo lại vòng hiện tại'
+    - '&e/keiba admin reset history confirm &7- Xóa lịch sử hiển thị'
+    - '&e/keiba admin reset stats confirm &7- Xóa vé cũ và thống kê'
+    - '&c/keiba admin reset all confirm &7- Reset toàn bộ dữ liệu'
+
+horses:
+# Tùy chọn cho từng ngựa: material, display-name và lore. Không khai báo sẽ dùng gui.horse.
+# style chỉ nhận đúng một trong 4 giá trị viết hoa sau:
+#   NIGE   (Dẫn đầu): được cộng lợi thế rất lớn ở đầu cuộc đua, sau đó giảm dần.
+#   SENKO  (Bám đầu): chạy ổn định phía trước, mạnh nhất quanh giai đoạn 35% đường đua.
+#   SASHI  (Tăng tốc giữa): chưa có bonus trước 45%, sau đó tăng tốc dần về cuối.
+#   OIKOMI (Nước rút cuối): bị trừ nhẹ trước 70%, từ 70% trở đi nhận bonus nước rút lớn nhất.
+# Chỉ số: power thiên về đầu chặng, finish thiên về cuối chặng,
+# stamina đóng góp ổn định suốt cuộc đua. Các style không bảo đảm thắng mà chỉ đổi nhịp chạy.
+# Ba dòng dễ nhầm trong lore:
+#   {style_modifier}: điều kiện vòng tăng/giảm riêng BONUS style bao nhiêu %, không phải toàn tốc độ.
+#   {odds}: hệ số TIỀN THƯỞNG theo pool + tài trợ server; không phản ánh khả năng thắng.
+  - name: "Akatsuki"
+    style: "NIGE"
+    power: 78
+    stamina: 66
+    finish: 58
+    display-name: '&c&l#{number} Akatsuki &4🔥'
+    lore:
+      - '&8━━━━━━━━━━━━━━━━━━━━'
+      - '&7Danh hiệu: &c&lTia Chớp Bình Minh'
+      - '&7Lối chạy: &f{style}'
+      - ''
+      - '&c⚔ Sức mạnh: &f{power}'
+      - '&a❤ Thể lực: &f{stamina}'
+      - '&d✦ Nước rút: &f{finish}'
+      - ''
+      - '&7Ảnh hưởng style vòng này: &b{style_modifier}%'
+      - '&6$ Hệ số thưởng: &ex{odds}'
+      - ''
+      - '{selection_hint}'
+      - '&8━━━━━━━━━━━━━━━━━━━━'
+  - name: "Hikari"
+    style: "SENKO"
+    power: 74
+    stamina: 73
+    finish: 65
+    display-name: '&e&l#{number} Hikari &6☀'
+    lore: ['&8━━━━━━━━━━━━━━━━━━━━','&7Danh hiệu: &e&lÁnh Sáng Hoàng Kim','&7Lối chạy: &f{style}','','&c⚔ Sức mạnh: &f{power}','&a❤ Thể lực: &f{stamina}','&d✦ Nước rút: &f{finish}','','&7Ảnh hưởng style vòng này: &b{style_modifier}%','&6$ Hệ số thưởng: &ex{odds}','','{selection_hint}','&8━━━━━━━━━━━━━━━━━━━━']
+  - name: "Kazehana"
+    style: "SASHI"
+    power: 69
+    stamina: 75
+    finish: 77
+    display-name: '&a&l#{number} Kazehana &2❈'
+    lore: ['&8━━━━━━━━━━━━━━━━━━━━','&7Danh hiệu: &a&lVũ Điệu Cuồng Phong','&7Lối chạy: &f{style}','','&c⚔ Sức mạnh: &f{power}','&a❤ Thể lực: &f{stamina}','&d✦ Nước rút: &f{finish}','','&7Ảnh hưởng style vòng này: &b{style_modifier}%','&6$ Hệ số thưởng: &ex{odds}','','{selection_hint}','&8━━━━━━━━━━━━━━━━━━━━']
+  - name: "Raimei"
+    style: "OIKOMI"
+    power: 65
+    stamina: 70
+    finish: 86
+    display-name: '&5&l#{number} Raimei &d⚡'
+    lore: ['&8━━━━━━━━━━━━━━━━━━━━','&7Danh hiệu: &5&lLôi Thần Giáng Thế','&7Lối chạy: &f{style}','','&c⚔ Sức mạnh: &f{power}','&a❤ Thể lực: &f{stamina}','&d✦ Nước rút: &f{finish}','','&7Ảnh hưởng style vòng này: &b{style_modifier}%','&6$ Hệ số thưởng: &ex{odds}','','{selection_hint}','&8━━━━━━━━━━━━━━━━━━━━']
+  - name: "Sakura"
+    style: "SENKO"
+    power: 72
+    stamina: 76
+    finish: 69
+    display-name: '&d&l#{number} Sakura &f✿'
+    lore: ['&8━━━━━━━━━━━━━━━━━━━━','&7Danh hiệu: &d&lCánh Hoa Bất Diệt','&7Lối chạy: &f{style}','','&c⚔ Sức mạnh: &f{power}','&a❤ Thể lực: &f{stamina}','&d✦ Nước rút: &f{finish}','','&7Ảnh hưởng style vòng này: &b{style_modifier}%','&6$ Hệ số thưởng: &ex{odds}','','{selection_hint}','&8━━━━━━━━━━━━━━━━━━━━']
+  - name: "Kurogane"
+    style: "NIGE"
+    power: 81
+    stamina: 61
+    finish: 56
+    display-name: '&8&l#{number} Kurogane &7⚔'
+    lore: ['&8━━━━━━━━━━━━━━━━━━━━','&7Danh hiệu: &8&lThiết Kỵ Hắc Ám','&7Lối chạy: &f{style}','','&c⚔ Sức mạnh: &f{power}','&a❤ Thể lực: &f{stamina}','&d✦ Nước rút: &f{finish}','','&7Ảnh hưởng style vòng này: &b{style_modifier}%','&6$ Hệ số thưởng: &ex{odds}','','{selection_hint}','&8━━━━━━━━━━━━━━━━━━━━']
+  - name: "Shiranui"
+    style: "SASHI"
+    power: 70
+    stamina: 72
+    finish: 80
+    display-name: '&6&l#{number} Shiranui &c♨'
+    lore: ['&8━━━━━━━━━━━━━━━━━━━━','&7Danh hiệu: &6&lHỏa Diệm Ma Ảnh','&7Lối chạy: &f{style}','','&c⚔ Sức mạnh: &f{power}','&a❤ Thể lực: &f{stamina}','&d✦ Nước rút: &f{finish}','','&7Ảnh hưởng style vòng này: &b{style_modifier}%','&6$ Hệ số thưởng: &ex{odds}','','{selection_hint}','&8━━━━━━━━━━━━━━━━━━━━']
+  - name: "Tsukikage"
+    style: "OIKOMI"
+    power: 63
+    stamina: 78
+    finish: 84
+    display-name: '&b&l#{number} Tsukikage &3☾'
+    lore: ['&8━━━━━━━━━━━━━━━━━━━━','&7Danh hiệu: &b&lNguyệt Ảnh Vô Thanh','&7Lối chạy: &f{style}','','&c⚔ Sức mạnh: &f{power}','&a❤ Thể lực: &f{stamina}','&d✦ Nước rút: &f{finish}','','&7Ảnh hưởng style vòng này: &b{style_modifier}%','&6$ Hệ số thưởng: &ex{odds}','','{selection_hint}','&8━━━━━━━━━━━━━━━━━━━━']

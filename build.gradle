@@ -1,0 +1,30 @@
+plugins { id 'java' }
+
+group = 'vn.kir.keiba'
+version = '4.4.0'
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(25) }
+}
+
+dependencies {
+    compileOnly fileTree(dir: '../../libraries', include: '**/*.jar')
+    compileOnly files('../../plugins/Vault.jar')
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.xerial:sqlite-jdbc:3.49.1.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('plugin.yml') { expand(version: project.version) }
+}
+
+jar { archiveFileName = "KirKeiba-${project.version}.jar" }
+test { useJUnitPlatform() }

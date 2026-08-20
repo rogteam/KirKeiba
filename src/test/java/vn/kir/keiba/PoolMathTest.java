@@ -1,0 +1,3 @@
+package vn.kir.keiba;
+import org.junit.jupiter.api.Test;import static org.junit.jupiter.api.Assertions.*;
+class PoolMathTest{@Test void pariMutuel(){assertEquals(4.25,PoolMath.decimalOdds(100000,20000,.15),.001);assertEquals(42500,PoolMath.payout(10000,100000,20000,.15),.001);}@Test void emptyPool(){assertEquals(0,PoolMath.decimalOdds(0,0,.15));}@Test void seededSoloMarketCanProfit(){assertEquals(1.70,PoolMath.decimalOdds(60000,30000,.15,1.2,10),.001);}@Test void clampsMinimumAndMaximum(){assertEquals(1.2,PoolMath.decimalOdds(10000,10000,.15,1.2,10),.001);assertEquals(10,PoolMath.decimalOdds(1000000,1000,.15,1.2,10),.001);}}

@@ -1,7 +1,7 @@
 plugins { id 'java' }
 
 group = 'vn.kir.keiba'
-version = '4.4.1'
+version = '4.5.0'
 
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(25) }

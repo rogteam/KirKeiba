@@ -40,3 +40,6 @@ desktop.ini
 *.bak
 *.swp
 *~
+
+# Claude Code project instructions (local only)
+CLAUDE.md

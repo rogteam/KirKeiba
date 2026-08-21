@@ -22,12 +22,15 @@ public final class KirKeibaPlugin extends JavaPlugin {
             repository = new RaceRepository(getDataFolder().toPath());
             races = new RaceManager(this, provider.getProvider(), repository);
             var menu = new KeibaMenu(this, races);
+            var watchGui = new RaceWatchGui(this, races);
             updateChecker = new UpdateChecker(this);
             getServer().getPluginManager().registerEvents(menu, this);
+            getServer().getPluginManager().registerEvents(watchGui, this);
             var command = getCommand("keiba");
-            var executor = new KeibaCommand(this, races, menu, updateChecker);
+            var executor = new KeibaCommand(this, races, menu, updateChecker, watchGui);
             command.setExecutor(executor);
             command.setTabCompleter(executor);
+            watchGui.start();
             races.start();
             updateChecker.checkOnStartup();
             getLogger().info("KirKeiba " + getPluginMeta().getVersion() + " đã bật.");

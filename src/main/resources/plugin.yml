@@ -10,7 +10,7 @@ libraries:
 commands:
   keiba:
     description: Mở trường đua KIR Keiba
-    usage: /keiba [status|tickets|admin]
+    usage: /keiba [status|tickets|map|watch|admin]
 permissions:
   kirkeiba.use:
     default: true

@@ -534,6 +534,8 @@ messages:
     - '&e/keiba status &7- Xem trạng thái vòng hiện tại'
     - '&e/keiba tickets &7- Xem các vé của bạn'
     - '&e/keiba help &7- Xem hướng dẫn trò chơi'
+    - '&e/keiba map &7- Nhận map item theo dõi đua theo thời gian thực'
+    - '&e/keiba watch &7- Mở GUI xem đua trực tiếp (inventory)'
     - '&e/keiba admin &7- Các lệnh quản trị (cần quyền)'
   admin-help:
     - '&6----- KIR Keiba Admin -----'
@@ -567,6 +569,19 @@ update-check:
     available: '&eCó bản KirKeiba mới &f{latest}&e: &b{url}'
     failed: '&cKhông thể kiểm tra cập nhật: &7{error}'
     disabled: '&8Kiểm tra cập nhật đang tắt trong config.'
+
+# ======================== MAP XEM ĐUA ========================
+# Dùng /keiba map để nhận map item. Cầm tay hoặc đặt vào Item Frame.
+# ID của MapView được lưu vào plugins/KirKeiba/map_id.dat để tái sử dụng sau restart.
+# Tắt view-map sẽ disable /keiba map và không tạo MapView khi bật plugin.
+view-map:
+  enabled: true
+
+# ======================== GUI XEM ĐUA TRỰC TIẾP ========================
+# Dùng /keiba watch để mở. GUI inventory 54 slot, 2 ngựa/hàng.
+# Tắt view-gui sẽ vô hiệu /keiba watch và không cho mở GUI xem đua.
+view-gui:
+  enabled: true
 
 horses:
 # Tùy chọn cho từng ngựa: material, display-name và lore. Không khai báo sẽ dùng gui.horse.
